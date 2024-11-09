@@ -14,7 +14,7 @@ env:
   JAVA_VERSION: "17"
   GRADLE_VERSION: "8.9"
   GO_VERSION: "1.22.1"
-  GO_MOBILE_VERSION: "v0.0.0-20241016134751-7ff83004ec2c"
+  GO_MOBILE_VERSION: "latest"  # Changed to latest since specific version caused issues
 
 jobs:
   build:
@@ -51,26 +51,20 @@ jobs:
         echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
         echo "PATH=$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/build-tools/${{ env.ANDROID_SDK_VERSION }}:$PATH" >> $GITHUB_ENV
 
-    - name: Set up Go workspace and install gomobile
+    - name: Install and setup Gomobile
       run: |
-        # Create a temporary workspace
-        mkdir -p /tmp/go-workspace
-        cd /tmp/go-workspace
-        
-        # Initialize Go module
-        go mod init temp
-        
-        # Get gomobile
-        go get golang.org/x/mobile/cmd/gomobile@${{ env.GO_MOBILE_VERSION }}
-        go mod tidy
-        go install golang.org/x/mobile/cmd/gomobile
+        # Install gomobile and its dependencies
+        go install golang.org/x/mobile/cmd/gomobile@latest
+        go install golang.org/x/mobile@latest
         
         # Initialize gomobile
+        export PATH=$PATH:$(go env GOPATH)/bin
         gomobile init
 
     - name: Build XrayCore
       run: |
         cd XrayCore
+        export PATH=$PATH:$(go env GOPATH)/bin
         gomobile bind -o "../app/libs/XrayCore.aar" -androidapi 26 -target "android/arm64-v8a" -ldflags="-buildid=" -trimpath
 
     - name: Create dist directory
