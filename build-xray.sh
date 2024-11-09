@@ -18,9 +18,9 @@ GO_MOBILE_VERSION="v0.0.0-20241016134751-7ff83004ec2c"
 
 # Install Tools
 apt-get install -t bookworm-backports -y golang-go
-apt-get install -y git wget unzip gcc libc-dev #openjdk-$JAVA_VERSION-jdk-headless sdkmanager 
-# sdkmanager "platform-tools" "platforms;$ANDROID_PLATFORM_VERSION" "build-tools;$ANDROID_SDK_VERSION"
-# sdkmanager --install "ndk;$ANDROID_NDK_VERSION" --channel=3
+apt-get install -y git wget unzip gcc libc-dev openjdk-$JAVA_VERSION-jdk-headless sdkmanager 
+sdkmanager "platform-tools" "platforms;$ANDROID_PLATFORM_VERSION" "build-tools;$ANDROID_SDK_VERSION"
+sdkmanager --install "ndk;$ANDROID_NDK_VERSION" --channel=3
 
 # Define dirs
 HOME_DIR="/home/vagrant"
