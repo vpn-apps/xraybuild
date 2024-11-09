@@ -75,7 +75,7 @@ git submodule update --init --recursive
 
 # # Clean task
 # rm gradle/wrapper/gradle-wrapper.jar
-# cd app
+cd app
 # gradle clean
 
 # Build XrayCore
