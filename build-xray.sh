@@ -25,7 +25,7 @@ sdkmanager --install "ndk;$ANDROID_NDK_VERSION" --channel=3
 # Define dirs
 HOME_DIR="/home/vagrant"
 BUILD_DIR="$HOME_DIR/build"
-REPO_DIR="$BUILD_DIR/io.github.saeeddev94.xray"
+REPO_DIR="$BUILD_DIR/io.github.vpn-apps.xraybuild"
 GRADLE_DIR="$BUILD_DIR/gradle"
 SRC_DIR="$BUILD_DIR/srclib"
 GO_ROOT_DIR="$SRC_DIR/go"
@@ -35,14 +35,14 @@ GO_PATH_DIR="$HOME_DIR/go"
 mkdir -p $GRADLE_DIR
 mkdir -p $SRC_DIR
 
-# Download gradle
-pushd $GRADLE_DIR
-GRADLE_ARCHIVE="gradle-$GRADLE_VERSION-bin.zip"
-wget "https://services.gradle.org/distributions/$GRADLE_ARCHIVE"
-unzip "$GRADLE_ARCHIVE"
-rm "$GRADLE_ARCHIVE"
-mv * "$GRADLE_VERSION"
-popd
+# # Download gradle
+# pushd $GRADLE_DIR
+# GRADLE_ARCHIVE="gradle-$GRADLE_VERSION-bin.zip"
+# wget "https://services.gradle.org/distributions/$GRADLE_ARCHIVE"
+# unzip "$GRADLE_ARCHIVE"
+# rm "$GRADLE_ARCHIVE"
+# mv * "$GRADLE_VERSION"
+# popd
 
 # Build go
 git clone https://github.com/golang/go.git $GO_ROOT_DIR
@@ -71,12 +71,12 @@ export PATH="$GOPATH/bin:$PATH"
 git clone https://github.com/SaeedDev94/Xray.git $REPO_DIR
 cd $REPO_DIR
 git submodule update --init --recursive
-git checkout "$RELEASE_TAG"
+#git checkout "$RELEASE_TAG"
 
-# Clean task
-rm gradle/wrapper/gradle-wrapper.jar
-cd app
-gradle clean
+# # Clean task
+# rm gradle/wrapper/gradle-wrapper.jar
+# cd app
+# gradle clean
 
 # Build XrayCore
 pushd ../XrayCore
@@ -86,19 +86,21 @@ gomobile init
 gomobile bind -o "../app/libs/XrayCore.aar" -androidapi 26 -target "android/$NATIVE_ARCH" -ldflags="-buildid=" -trimpath
 popd
 
-# Build app
-gradle -PabiId=$ABI_ID -PabiTarget=$ABI_TARGET assembleRelease
+mv "../app/libs/XrayCore.aar" "$DIST_DIR"
 
-# Sign app
-VERSION_CODE=$(cat versionCode.txt)
-((VERSION_CODE += ABI_ID))
-BUILD_NAME="Xray-$RELEASE_TAG-$VERSION_CODE.apk"
-cd build/outputs/apk/release
-echo "$KS_FILE" > /tmp/xray_base64.txt
-base64 -d /tmp/xray_base64.txt > /tmp/xray.jks
-zipalign -p -f -v 4 "app-$ABI_TARGET-release-unsigned.apk" "$BUILD_NAME"
-apksigner sign --ks /tmp/xray.jks --ks-pass "pass:$KS_PASSWORD" --ks-key-alias "$KEY_ALIAS" --key-pass "pass:$KEY_PASSWORD" "$BUILD_NAME"
-rm /tmp/xray_base64.txt /tmp/xray.jks
+# # Build app
+# gradle -PabiId=$ABI_ID -PabiTarget=$ABI_TARGET assembleRelease
 
-# Move app to dist dir
-mv "$BUILD_NAME" "$DIST_DIR"
+# # Sign app
+# VERSION_CODE=$(cat versionCode.txt)
+# ((VERSION_CODE += ABI_ID))
+# BUILD_NAME="Xray-$RELEASE_TAG-$VERSION_CODE.apk"
+# cd build/outputs/apk/release
+# echo "$KS_FILE" > /tmp/xray_base64.txt
+# base64 -d /tmp/xray_base64.txt > /tmp/xray.jks
+# zipalign -p -f -v 4 "app-$ABI_TARGET-release-unsigned.apk" "$BUILD_NAME"
+# apksigner sign --ks /tmp/xray.jks --ks-pass "pass:$KS_PASSWORD" --ks-key-alias "$KEY_ALIAS" --key-pass "pass:$KEY_PASSWORD" "$BUILD_NAME"
+# rm /tmp/xray_base64.txt /tmp/xray.jks
+
+# # Move app to dist dir
+# mv "$BUILD_NAME" "$DIST_DIR"
