@@ -1,0 +1,74 @@
+name: Build Xray Android
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  ANDROID_PLATFORM_VERSION: "android-34"
+  ANDROID_SDK_VERSION: "34.0.0"
+  ANDROID_NDK_VERSION: "27.1.12297006"
+  JAVA_VERSION: "17"
+  GRADLE_VERSION: "8.9"
+  GO_VERSION: "go1.23.2"
+  GO_MOBILE_VERSION: "v0.0.0-20241016134751-7ff83004ec2c"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
+
+    - name: Set up Java
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: ${{ env.JAVA_VERSION }}
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: ${{ env.GO_VERSION }}
+
+    - name: Install Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Install NDK
+      run: |
+        sdkmanager --install "ndk;${{ env.ANDROID_NDK_VERSION }}" --channel=3
+        sdkmanager "platform-tools" "platforms;${{ env.ANDROID_PLATFORM_VERSION }}" "build-tools;${{ env.ANDROID_SDK_VERSION }}"
+
+    - name: Set up environment variables
+      run: |
+        echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> $GITHUB_ENV
+        echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/${{ env.ANDROID_NDK_VERSION }}" >> $GITHUB_ENV
+        echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
+        echo "PATH=$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/build-tools/${{ env.ANDROID_SDK_VERSION }}:$PATH" >> $GITHUB_ENV
+
+    - name: Install Go Mobile
+      run: |
+        go install golang.org/x/mobile/cmd/gomobile@${{ env.GO_MOBILE_VERSION }}
+        go mod download
+        gomobile init
+
+    - name: Build XrayCore
+      run: |
+        cd XrayCore
+        gomobile bind -o "../app/libs/XrayCore.aar" -androidapi 26 -target "android/arm64-v8a" -ldflags="-buildid=" -trimpath
+
+    - name: Create dist directory
+      run: |
+        mkdir -p dist
+        mv app/libs/XrayCore.aar dist/
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: xray-build
+        path: dist/XrayCore.aar
