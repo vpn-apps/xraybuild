@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Set execute permissions
+        run: chmod +x build-xray.sh
       - name: Build arm32 docker
         run: docker build -t arm32 -f Dockerfile .
       - name: Compile arm32 build
